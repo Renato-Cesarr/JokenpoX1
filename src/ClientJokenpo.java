@@ -29,7 +29,7 @@ public class ClientJokenpo {
                         System.out.print("Digite sua jogada (pedra, papel, tesoura ou sair): ");
                         move = console.readLine().trim().toLowerCase();
                         if (move.equals("pedra") || move.equals("papel") || move.equals("tesoura") || move.equals("sair")) {
-                            break; // Entrada válida
+                            break; 
                         }
                         System.out.println("Entrada inválida. Tente novamente.");
                     }

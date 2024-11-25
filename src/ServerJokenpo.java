@@ -3,76 +3,75 @@ import java.net.*;
 import java.util.concurrent.*;
 
 public class ServerJokenpo {
-    private static final int PORT = 12345;
+    private static final int PORTA = 12345;
 
     public static void main(String[] args) {
-        System.out.println("Servidor iniciado na porta " + PORT);
+        System.out.println("Servidor iniciado na porta " + PORTA);
 
-        try (ServerSocket serverSocket = new ServerSocket(PORT)) {
+        try (ServerSocket servidorSocket = new ServerSocket(PORTA)) {
             System.out.println("Aguardando jogadores...");
 
-            Socket player1 = serverSocket.accept();
+            Socket jogador1 = servidorSocket.accept();
             System.out.println("Jogador 1 conectado!");
-            PrintWriter out1 = new PrintWriter(player1.getOutputStream(), true);
-            BufferedReader in1 = new BufferedReader(new InputStreamReader(player1.getInputStream()));
+            PrintWriter saidaJogador1 = new PrintWriter(jogador1.getOutputStream(), true);
+            BufferedReader entradaJogador1 = new BufferedReader(new InputStreamReader(jogador1.getInputStream()));
 
-            Socket player2 = serverSocket.accept();
+            Socket jogador2 = servidorSocket.accept();
             System.out.println("Jogador 2 conectado!");
-            PrintWriter out2 = new PrintWriter(player2.getOutputStream(), true);
-            BufferedReader in2 = new BufferedReader(new InputStreamReader(player2.getInputStream()));
+            PrintWriter saidaJogador2 = new PrintWriter(jogador2.getOutputStream(), true);
+            BufferedReader entradaJogador2 = new BufferedReader(new InputStreamReader(jogador2.getInputStream()));
 
-            out1.println("Bem-vindo ao Jokenpo! Você é o Jogador 1. Aguardando o Jogador 2...");
-            out2.println("Bem-vindo ao Jokenpo! Você é o Jogador 2. O jogo começará.");
-            out1.println("Jogador 2 conectado! O jogo começará.");
+            saidaJogador1.println("Bem-vindo ao Jokenpo! Você é o Jogador 1. Aguardando o Jogador 2...");
+            saidaJogador2.println("Bem-vindo ao Jokenpo! Você é o Jogador 2. O jogo começará.");
+            saidaJogador1.println("Jogador 2 conectado! O jogo começará.");
 
             ExecutorService pool = Executors.newFixedThreadPool(2);
 
             while (true) {
-                String player1Move = getPlayerMove(pool, out1, in1);
-                String player2Move = getPlayerMove(pool, out2, in2);
+                String jogadaJogador1 = obterJogada(pool, saidaJogador1, entradaJogador1);
+                String jogadaJogador2 = obterJogada(pool, saidaJogador2, entradaJogador2);
 
-                if ("sair".equalsIgnoreCase(player1Move) || "sair".equalsIgnoreCase(player2Move)) {
-                    out1.println("Jogo encerrado. Até a próxima!");
-                    out2.println("Jogo encerrado. Até a próxima!");
+                if ("sair".equalsIgnoreCase(jogadaJogador1) || "sair".equalsIgnoreCase(jogadaJogador2)) {
+                    saidaJogador1.println("Jogo encerrado. Até a próxima!");
+                    saidaJogador2.println("Jogo encerrado. Até a próxima!");
                     break;
                 }
 
-                String result = determineWinner("Jogador 1", player1Move, "Jogador 2", player2Move);
-                out1.println(result);
-                out2.println(result);
+                String resultado = determinarVencedor("Jogador 1", jogadaJogador1, "Jogador 2", jogadaJogador2);
+                saidaJogador1.println(resultado);
+                saidaJogador2.println(resultado);
             }
 
             pool.shutdown();
-            player1.close();
-            player2.close();
+            jogador1.close();
+            jogador2.close();
             System.out.println("Servidor encerrado.");
         } catch (Exception e) {
             e.printStackTrace();
         }
     }
 
-    private static String getPlayerMove(ExecutorService pool, PrintWriter out, BufferedReader in) throws Exception {
-        Future<String> futureMove = pool.submit(() -> {
-            out.println("Faça sua jogada (pedra, papel, tesoura ou 'sair' para encerrar):");
-            return in.readLine().trim().toLowerCase();
+    private static String obterJogada(ExecutorService pool, PrintWriter saida, BufferedReader entrada) throws Exception {
+        Future<String> futuroJogada = pool.submit(() -> {
+            saida.println("Faça sua jogada (pedra, papel, tesoura ou 'sair' para encerrar):");
+            return entrada.readLine().trim().toLowerCase();
         });
-        return futureMove.get();
+        return futuroJogada.get();
     }
 
-    private static String determineWinner(String name1, String move1, String name2, String move2) {
-        if (move1.equals(move2)) {
-            return "Empate! Ambos jogaram " + move1;
+    private static String determinarVencedor(String nome1, String jogada1, String nome2, String jogada2) {
+        if (jogada1.equals(jogada2)) {
+            return "Empate! Ambos jogaram " + jogada1;
         }
 
-        boolean player1Wins = (move1.equals("pedra") && move2.equals("tesoura")) ||
-                              (move1.equals("tesoura") && move2.equals("papel")) ||
-                              (move1.equals("papel") && move2.equals("pedra"));
+        boolean jogador1Venceu = (jogada1.equals("pedra") && jogada2.equals("tesoura")) ||
+                                  (jogada1.equals("tesoura") && jogada2.equals("papel")) ||
+                                  (jogada1.equals("papel") && jogada2.equals("pedra"));
 
-        if (player1Wins) {
-            return name1 + " venceu com " + move1 + " contra " + move2 + " de " + name2;
+        if (jogador1Venceu) {
+            return nome1 + " venceu com " + jogada1 + " contra " + jogada2 + " de " + nome2;
         } else {
-            return name2 + " venceu com " + move2 + " contra " + move1 + " de " + name1;
+            return nome2 + " venceu com " + jogada2 + " contra " + jogada1 + " de " + nome1;
         }
     }
 }
-
