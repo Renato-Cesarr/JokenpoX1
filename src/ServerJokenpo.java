@@ -16,31 +16,20 @@ public class ServerJokenpo {
             PrintWriter out1 = new PrintWriter(player1.getOutputStream(), true);
             BufferedReader in1 = new BufferedReader(new InputStreamReader(player1.getInputStream()));
 
-            out1.println("Bem-vindo ao Jokenpo! Você é o Jogador 1. Aguardando o Jogador 2...");
-
             Socket player2 = serverSocket.accept();
             System.out.println("Jogador 2 conectado!");
             PrintWriter out2 = new PrintWriter(player2.getOutputStream(), true);
             BufferedReader in2 = new BufferedReader(new InputStreamReader(player2.getInputStream()));
 
-            out1.println("Jogador 2 conectado! O jogo começará.");
+            out1.println("Bem-vindo ao Jokenpo! Você é o Jogador 1. Aguardando o Jogador 2...");
             out2.println("Bem-vindo ao Jokenpo! Você é o Jogador 2. O jogo começará.");
+            out1.println("Jogador 2 conectado! O jogo começará.");
 
             ExecutorService pool = Executors.newFixedThreadPool(2);
 
             while (true) {
-                Future<String> move1 = pool.submit(() -> {
-                    out1.println("Faça sua jogada (pedra, papel, tesoura ou 'sair' para encerrar):");
-                    return in1.readLine();
-                });
-
-                Future<String> move2 = pool.submit(() -> {
-                    out2.println("Faça sua jogada (pedra, papel, tesoura ou 'sair' para encerrar):");
-                    return in2.readLine();
-                });
-
-                String player1Move = move1.get();
-                String player2Move = move2.get();
+                String player1Move = getPlayerMove(pool, out1, in1);
+                String player2Move = getPlayerMove(pool, out2, in2);
 
                 if ("sair".equalsIgnoreCase(player1Move) || "sair".equalsIgnoreCase(player2Move)) {
                     out1.println("Jogo encerrado. Até a próxima!");
@@ -62,14 +51,22 @@ public class ServerJokenpo {
         }
     }
 
+    private static String getPlayerMove(ExecutorService pool, PrintWriter out, BufferedReader in) throws Exception {
+        Future<String> futureMove = pool.submit(() -> {
+            out.println("Faça sua jogada (pedra, papel, tesoura ou 'sair' para encerrar):");
+            return in.readLine().trim().toLowerCase();
+        });
+        return futureMove.get();
+    }
+
     private static String determineWinner(String name1, String move1, String name2, String move2) {
-        if (move1.equalsIgnoreCase(move2)) {
+        if (move1.equals(move2)) {
             return "Empate! Ambos jogaram " + move1;
         }
 
-        boolean player1Wins = (move1.equalsIgnoreCase("pedra") && move2.equalsIgnoreCase("tesoura")) ||
-                              (move1.equalsIgnoreCase("tesoura") && move2.equalsIgnoreCase("papel")) ||
-                              (move1.equalsIgnoreCase("papel") && move2.equalsIgnoreCase("pedra"));
+        boolean player1Wins = (move1.equals("pedra") && move2.equals("tesoura")) ||
+                              (move1.equals("tesoura") && move2.equals("papel")) ||
+                              (move1.equals("papel") && move2.equals("pedra"));
 
         if (player1Wins) {
             return name1 + " venceu com " + move1 + " contra " + move2 + " de " + name2;
@@ -78,3 +75,4 @@ public class ServerJokenpo {
         }
     }
 }
+

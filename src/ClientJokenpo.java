@@ -24,7 +24,15 @@ public class ClientJokenpo {
                 System.out.println(serverMessage);
 
                 if (serverMessage.contains("Faça sua jogada")) {
-                    String move = console.readLine();
+                    String move;
+                    while (true) {
+                        System.out.print("Digite sua jogada (pedra, papel, tesoura ou sair): ");
+                        move = console.readLine().trim().toLowerCase();
+                        if (move.equals("pedra") || move.equals("papel") || move.equals("tesoura") || move.equals("sair")) {
+                            break; // Entrada válida
+                        }
+                        System.out.println("Entrada inválida. Tente novamente.");
+                    }
                     out.println(move);
 
                     if ("sair".equalsIgnoreCase(move)) {
